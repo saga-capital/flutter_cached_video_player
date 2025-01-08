@@ -27,7 +27,8 @@ project.getTasks().withType(JavaCompile).configureEach {
 apply plugin: 'com.android.library'
 
 android {
-    compileSdk 33
+    namespace = "com.lazyarts.vikram.cached_video_player"
+    compileSdk 35
 
     defaultConfig {
         minSdkVersion 16

@@ -9,15 +9,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 
+import 'src/closed_caption_file.dart';
+
 export 'package:video_player_platform_interface/video_player_platform_interface.dart'
     show DurationRange, DataSourceType, VideoFormat, VideoPlayerOptions;
 
-import 'src/closed_caption_file.dart';
 export 'src/closed_caption_file.dart';
 
 final VideoPlayerPlatform _videoPlayerPlatform = VideoPlayerPlatform.instance
-  // This will clear all open videos on the platform when a full restart is
-  // performed.
+// This will clear all open videos on the platform when a full restart is
+// performed.
   ..init();
 
 /// The duration, current position, buffering state, error state and settings
@@ -333,8 +334,11 @@ class CachedVideoPlayerController
           _applyPlayPause();
           break;
         case VideoEventType.completed:
-          value = value.copyWith(isPlaying: false, position: value.duration);
-          _timer?.cancel();
+          // In this case we need to stop _timer, set isPlaying=false, and
+          // position=value.duration. Instead of setting the values directly,
+          // we use pause() and seekTo() to ensure the platform stops playing
+          // and seeks to the last frame of the video.
+          pause().then((void pauseResult) => seekTo(value.duration));
           break;
         case VideoEventType.bufferingUpdate:
           value = value.copyWith(buffered: event.buffered);
@@ -345,6 +349,8 @@ class CachedVideoPlayerController
         case VideoEventType.bufferingEnd:
           value = value.copyWith(isBuffering: false);
           break;
+        case VideoEventType.isPlayingStateUpdate:
+          value = value.copyWith(isPlaying: event.isPlaying);
         case VideoEventType.unknown:
           break;
       }
